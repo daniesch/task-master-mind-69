@@ -60,7 +60,7 @@ export default function TasksApp() {
       title: title.trim(),
       durationMinutes: Number(duration),
       dueDate: hasDueDate ? dueDate : null,
-      repeat: hasDueDate ? repeat : "none",
+      repeat,
       category,
     });
     setTitle(""); setDuration(""); setRepeat("none");
