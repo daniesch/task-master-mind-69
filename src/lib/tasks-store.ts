@@ -6,18 +6,28 @@ export interface Task {
   id: string;
   title: string;
   durationMinutes: number;
-  dueDate: string; // ISO date
+  dueDate: string | null; // ISO date, optional
   repeat: RepeatInterval;
+  category: string;
   completed: boolean;
   createdAt: string;
 }
 
 const KEY = "tasks_app_v1";
+const CAT_KEY = "tasks_app_categories_v1";
+
+const DEFAULT_CATEGORIES = ["Allgemein", "Haushalt", "Arbeit", "Privat"];
 
 function read(): Task[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem(KEY) || "[]");
+    const raw = JSON.parse(localStorage.getItem(KEY) || "[]");
+    // migrate older entries
+    return raw.map((t: any) => ({
+      category: "Allgemein",
+      dueDate: t.dueDate ?? null,
+      ...t,
+    }));
   } catch {
     return [];
   }
@@ -28,12 +38,31 @@ function write(tasks: Task[]) {
   window.dispatchEvent(new Event("tasks:updated"));
 }
 
+function readCategories(): string[] {
+  if (typeof window === "undefined") return DEFAULT_CATEGORIES;
+  try {
+    const raw = JSON.parse(localStorage.getItem(CAT_KEY) || "null");
+    if (Array.isArray(raw) && raw.length > 0) return raw;
+  } catch {}
+  return DEFAULT_CATEGORIES;
+}
+
+function writeCategories(cats: string[]) {
+  localStorage.setItem(CAT_KEY, JSON.stringify(cats));
+  window.dispatchEvent(new Event("tasks:updated"));
+}
+
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
 
   useEffect(() => {
     setTasks(read());
-    const handler = () => setTasks(read());
+    setCategories(readCategories());
+    const handler = () => {
+      setTasks(read());
+      setCategories(readCategories());
+    };
     window.addEventListener("tasks:updated", handler);
     window.addEventListener("storage", handler);
     return () => {
@@ -60,7 +89,7 @@ export function useTasks() {
     const all = read();
     const task = all.find((t) => t.id === id);
     if (!task) return;
-    if (task.repeat === "none") {
+    if (task.repeat === "none" || !task.dueDate) {
       write(all.map((t) => (t.id === id ? { ...t, completed: true } : t)));
     } else {
       const nextDue = computeNextDue(task.dueDate, task.repeat);
@@ -68,7 +97,20 @@ export function useTasks() {
     }
   }, []);
 
-  return { tasks, addTask, removeTask, completeTask };
+  const addCategory = useCallback((name: string) => {
+    const n = name.trim();
+    if (!n) return;
+    const current = readCategories();
+    if (current.includes(n)) return;
+    writeCategories([...current, n]);
+  }, []);
+
+  const removeCategory = useCallback((name: string) => {
+    const current = readCategories().filter((c) => c !== name);
+    writeCategories(current.length ? current : DEFAULT_CATEGORIES);
+  }, []);
+
+  return { tasks, categories, addTask, removeTask, completeTask, addCategory, removeCategory };
 }
 
 function computeNextDue(dueDate: string, repeat: RepeatInterval): string {
@@ -92,7 +134,8 @@ export const repeatLabels: Record<RepeatInterval, string> = {
   yearly: "1x Jährlich",
 };
 
-export function daysUntil(dueDate: string): number {
+export function daysUntil(dueDate: string | null): number {
+  if (!dueDate) return Number.POSITIVE_INFINITY;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const due = new Date(dueDate);
