@@ -174,24 +174,22 @@ export default function TasksApp() {
                     <Switch id="has-due" checked={hasDueDate} onCheckedChange={setHasDueDate} />
                   </div>
                   {hasDueDate && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="due">Fällig bis</Label>
-                        <Input id="due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Wiederholung</Label>
-                        <Select value={repeat} onValueChange={(v) => setRepeat(v as RepeatInterval)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(repeatLabels).map(([k, v]) => (
-                              <SelectItem key={k} value={k}>{v}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </>
+                    <div className="space-y-2">
+                      <Label htmlFor="due">Fällig bis</Label>
+                      <Input id="due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+                    </div>
                   )}
+                  <div className="space-y-2">
+                    <Label>Wiederholung</Label>
+                    <Select value={repeat} onValueChange={(v) => setRepeat(v as RepeatInterval)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(repeatLabels).map(([k, v]) => (
+                          <SelectItem key={k} value={k}>{v}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button onClick={submit}>Hinzufügen</Button>
