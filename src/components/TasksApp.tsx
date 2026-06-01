@@ -248,7 +248,113 @@ export default function TasksApp() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <EditTaskDialog
+        task={editing}
+        categories={categories}
+        onClose={() => setEditing(null)}
+        onSave={(id, patch) => { updateTask(id, patch); setEditing(null); }}
+      />
     </div>
+  );
+}
+
+function EditTaskDialog({
+  task, categories, onClose, onSave,
+}: {
+  task: Task | null;
+  categories: string[];
+  onClose: () => void;
+  onSave: (id: string, patch: Partial<Task>) => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [duration, setDuration] = useState("");
+  const [hasDueDate, setHasDueDate] = useState(true);
+  const [dueDate, setDueDate] = useState("");
+  const [repeat, setRepeat] = useState<RepeatInterval>("none");
+  const [category, setCategory] = useState("");
+
+  useEffect(() => {
+    if (!task) return;
+    setTitle(task.title);
+    setDuration(String(task.durationMinutes));
+    setHasDueDate(!!task.dueDate);
+    setDueDate(task.dueDate ?? new Date().toISOString().slice(0, 10));
+    setRepeat(task.repeat);
+    setCategory(task.category);
+  }, [task]);
+
+  return (
+    <Dialog open={!!task} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Aufgabe bearbeiten</DialogTitle>
+        </DialogHeader>
+        {task && (
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="e-title">Bezeichnung</Label>
+              <Input id="e-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="e-duration">Dauer (Minuten)</Label>
+              <Input id="e-duration" type="number" min={1} value={duration} onChange={(e) => setDuration(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Kategorie</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2">
+              <div>
+                <Label htmlFor="e-has-due" className="cursor-pointer">Mit Enddatum</Label>
+                <p className="text-xs text-muted-foreground">Aus = keine Frist</p>
+              </div>
+              <Switch id="e-has-due" checked={hasDueDate} onCheckedChange={setHasDueDate} />
+            </div>
+            {hasDueDate && (
+              <div className="space-y-2">
+                <Label htmlFor="e-due">Fällig bis</Label>
+                <Input id="e-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Wiederholung</Label>
+              <Select value={repeat} onValueChange={(v) => setRepeat(v as RepeatInterval)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(repeatLabels).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button
+            onClick={() => {
+              if (!task || !title.trim() || !duration) return;
+              onSave(task.id, {
+                title: title.trim(),
+                durationMinutes: Number(duration),
+                dueDate: hasDueDate ? dueDate : null,
+                repeat,
+                category,
+              });
+            }}
+          >
+            Speichern
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
   );
 }
 
