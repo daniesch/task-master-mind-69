@@ -16,7 +16,7 @@ export interface Task {
 const KEY = "tasks_app_v1";
 const CAT_KEY = "tasks_app_categories_v1";
 
-const DEFAULT_CATEGORIES = ["Allgemein", "Haushalt", "Arbeit", "Privat"];
+const DEFAULT_CATEGORIES = ["To Do", "Allgemein", "Haushalt", "Arbeit", "Privat"];
 
 function read(): Task[] {
   if (typeof window === "undefined") return [];
