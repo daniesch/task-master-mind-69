@@ -114,7 +114,25 @@ export function useTasks() {
     writeCategories(current.length ? current : DEFAULT_CATEGORIES);
   }, []);
 
-  return { tasks, categories, addTask, removeTask, completeTask, addCategory, removeCategory };
+  return { tasks, categories, addTask, updateTask, removeTask, completeTask, addCategory, removeCategory };
+}
+
+// Pastel color palette for categories (deterministic by name)
+const PASTEL_PALETTE = [
+  { bg: "oklch(0.95 0.05 25)", border: "oklch(0.85 0.08 25)" },   // peach
+  { bg: "oklch(0.95 0.05 80)", border: "oklch(0.85 0.08 80)" },   // butter
+  { bg: "oklch(0.95 0.05 140)", border: "oklch(0.85 0.08 140)" }, // mint
+  { bg: "oklch(0.95 0.05 200)", border: "oklch(0.85 0.08 200)" }, // sky
+  { bg: "oklch(0.95 0.05 260)", border: "oklch(0.85 0.08 260)" }, // lavender
+  { bg: "oklch(0.95 0.05 320)", border: "oklch(0.85 0.08 320)" }, // pink
+  { bg: "oklch(0.95 0.05 350)", border: "oklch(0.85 0.08 350)" }, // rose
+  { bg: "oklch(0.95 0.05 50)", border: "oklch(0.85 0.08 50)" },   // apricot
+];
+
+export function categoryColor(name: string): { bg: string; border: string } {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return PASTEL_PALETTE[hash % PASTEL_PALETTE.length];
 }
 
 function computeNextDue(dueDate: string, repeat: RepeatInterval): string {
