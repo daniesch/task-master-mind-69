@@ -201,18 +201,18 @@ export default function TasksApp() {
 
           <TabsContent value="all" className="mt-4 space-y-2">
             {openTasks.length === 0 && <EmptyState />}
-            {overdue.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} />)}
-            {today.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} />)}
-            {upcoming.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} />)}
-            {noDeadline.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} />)}
+            {overdue.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
+            {today.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
+            {upcoming.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
+            {noDeadline.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
           </TabsContent>
           <TabsContent value="today" className="mt-4 space-y-2">
             {today.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Nichts für heute. ✨</p>}
-            {today.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} />)}
+            {today.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
           </TabsContent>
           <TabsContent value="overdue" className="mt-4 space-y-2">
             {overdue.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Alles im grünen Bereich.</p>}
-            {overdue.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} />)}
+            {overdue.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
           </TabsContent>
         </Tabs>
       </main>
