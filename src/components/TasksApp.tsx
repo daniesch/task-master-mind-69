@@ -14,12 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { useTasks, type RepeatInterval, repeatLabels, daysUntil, formatDuration, type Task } from "@/lib/tasks-store";
+import { useTasks, type RepeatInterval, repeatLabels, daysUntil, formatDuration, type Task, categoryColor } from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
 
 export default function TasksApp() {
-  const { tasks, categories, addTask, removeTask, completeTask, addCategory, removeCategory } = useTasks();
+  const { tasks, categories, addTask, updateTask, removeTask, completeTask, addCategory, removeCategory } = useTasks();
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Task | null>(null);
   const [catOpen, setCatOpen] = useState(false);
   const [availableMinutes, setAvailableMinutes] = useState(30);
   const [filterCategory, setFilterCategory] = useState<string>("all");
