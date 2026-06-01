@@ -276,15 +276,20 @@ function dueLabel(date: string): string {
   return `in ${d} Tg.`;
 }
 
-function TaskRow({ task, onDone, onDelete }: { task: Task; onDone: (id: string) => void; onDelete: (id: string) => void }) {
+function TaskRow({ task, onDone, onDelete, onEdit }: { task: Task; onDone: (id: string) => void; onDelete: (id: string) => void; onEdit: (t: Task) => void }) {
   const d = task.dueDate ? daysUntil(task.dueDate) : null;
   const isOverdue = d !== null && d < 0;
   const isToday = d === 0;
+  const color = categoryColor(task.category);
 
   return (
-    <Card className="p-4 flex items-center gap-3 shadow-[var(--shadow-soft)] border-border/60">
+    <Card
+      className="p-4 flex items-center gap-3 shadow-[var(--shadow-soft)] cursor-pointer hover:brightness-95 transition"
+      style={{ backgroundColor: color.bg, borderColor: color.border }}
+      onClick={() => onEdit(task)}
+    >
       <button
-        onClick={() => onDone(task.id)}
+        onClick={(e) => { e.stopPropagation(); onDone(task.id); }}
         className="shrink-0 rounded-full text-primary hover:text-primary-glow transition-colors"
         aria-label="Erledigt"
       >
@@ -306,7 +311,7 @@ function TaskRow({ task, onDone, onDelete }: { task: Task; onDone: (id: string) 
           ) : (
             <span className="inline-flex items-center gap-1 italic">ohne Frist</span>
           )}
-          <Badge variant="outline" className="gap-1 font-normal">
+          <Badge variant="outline" className="gap-1 font-normal bg-background/60">
             <Tag className="h-3 w-3" />{task.category}
           </Badge>
           {task.repeat !== "none" && (
@@ -317,7 +322,7 @@ function TaskRow({ task, onDone, onDelete }: { task: Task; onDone: (id: string) 
         </div>
       </div>
       <button
-        onClick={() => onDelete(task.id)}
+        onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
         className="shrink-0 text-muted-foreground hover:text-destructive transition-colors p-1"
         aria-label="Löschen"
       >
