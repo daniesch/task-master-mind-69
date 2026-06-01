@@ -85,6 +85,10 @@ export function useTasks() {
     write(read().filter((t) => t.id !== id));
   }, []);
 
+  const updateTask = useCallback((id: string, patch: Partial<Omit<Task, "id" | "createdAt">>) => {
+    write(read().map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  }, []);
+
   const completeTask = useCallback((id: string) => {
     const all = read();
     const task = all.find((t) => t.id === id);
