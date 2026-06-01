@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Clock, Calendar, Repeat, Trash2, CheckCircle2, Sparkles, AlertCircle, Tag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,12 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { useTasks, type RepeatInterval, repeatLabels, daysUntil, formatDuration, type Task } from "@/lib/tasks-store";
+import { useTasks, type RepeatInterval, repeatLabels, daysUntil, formatDuration, type Task, categoryColor } from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
 
 export default function TasksApp() {
-  const { tasks, categories, addTask, removeTask, completeTask, addCategory, removeCategory } = useTasks();
+  const { tasks, categories, addTask, updateTask, removeTask, completeTask, addCategory, removeCategory } = useTasks();
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Task | null>(null);
   const [catOpen, setCatOpen] = useState(false);
   const [availableMinutes, setAvailableMinutes] = useState(30);
   const [filterCategory, setFilterCategory] = useState<string>("all");
@@ -200,18 +201,18 @@ export default function TasksApp() {
 
           <TabsContent value="all" className="mt-4 space-y-2">
             {openTasks.length === 0 && <EmptyState />}
-            {overdue.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} />)}
-            {today.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} />)}
-            {upcoming.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} />)}
-            {noDeadline.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} />)}
+            {overdue.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
+            {today.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
+            {upcoming.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
+            {noDeadline.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
           </TabsContent>
           <TabsContent value="today" className="mt-4 space-y-2">
             {today.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Nichts für heute. ✨</p>}
-            {today.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} />)}
+            {today.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
           </TabsContent>
           <TabsContent value="overdue" className="mt-4 space-y-2">
             {overdue.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Alles im grünen Bereich.</p>}
-            {overdue.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} />)}
+            {overdue.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
           </TabsContent>
         </Tabs>
       </main>
@@ -247,7 +248,111 @@ export default function TasksApp() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <EditTaskDialog
+        task={editing}
+        categories={categories}
+        onClose={() => setEditing(null)}
+        onSave={(id, patch) => { updateTask(id, patch); setEditing(null); }}
+      />
     </div>
+  );
+}
+
+function EditTaskDialog({
+  task, categories, onClose, onSave,
+}: {
+  task: Task | null;
+  categories: string[];
+  onClose: () => void;
+  onSave: (id: string, patch: Partial<Task>) => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [duration, setDuration] = useState("");
+  const [hasDueDate, setHasDueDate] = useState(true);
+  const [dueDate, setDueDate] = useState("");
+  const [repeat, setRepeat] = useState<RepeatInterval>("none");
+  const [category, setCategory] = useState("");
+
+  useEffect(() => {
+    if (!task) return;
+    setTitle(task.title);
+    setDuration(String(task.durationMinutes));
+    setHasDueDate(!!task.dueDate);
+    setDueDate(task.dueDate ?? new Date().toISOString().slice(0, 10));
+    setRepeat(task.repeat);
+    setCategory(task.category);
+  }, [task]);
+
+  return (
+    <Dialog open={!!task} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Aufgabe bearbeiten</DialogTitle>
+        </DialogHeader>
+        {task && (
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="e-title">Bezeichnung</Label>
+              <Input id="e-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="e-duration">Dauer (Minuten)</Label>
+              <Input id="e-duration" type="number" min={1} value={duration} onChange={(e) => setDuration(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Kategorie</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2">
+              <div>
+                <Label htmlFor="e-has-due" className="cursor-pointer">Mit Enddatum</Label>
+                <p className="text-xs text-muted-foreground">Aus = keine Frist</p>
+              </div>
+              <Switch id="e-has-due" checked={hasDueDate} onCheckedChange={setHasDueDate} />
+            </div>
+            {hasDueDate && (
+              <div className="space-y-2">
+                <Label htmlFor="e-due">Fällig bis</Label>
+                <Input id="e-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Wiederholung</Label>
+              <Select value={repeat} onValueChange={(v) => setRepeat(v as RepeatInterval)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(repeatLabels).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button
+            onClick={() => {
+              if (!task || !title.trim() || !duration) return;
+              onSave(task.id, {
+                title: title.trim(),
+                durationMinutes: Number(duration),
+                dueDate: hasDueDate ? dueDate : null,
+                repeat,
+                category,
+              });
+            }}
+          >
+            Speichern
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -275,15 +380,20 @@ function dueLabel(date: string): string {
   return `in ${d} Tg.`;
 }
 
-function TaskRow({ task, onDone, onDelete }: { task: Task; onDone: (id: string) => void; onDelete: (id: string) => void }) {
+function TaskRow({ task, onDone, onDelete, onEdit }: { task: Task; onDone: (id: string) => void; onDelete: (id: string) => void; onEdit: (t: Task) => void }) {
   const d = task.dueDate ? daysUntil(task.dueDate) : null;
   const isOverdue = d !== null && d < 0;
   const isToday = d === 0;
+  const color = categoryColor(task.category);
 
   return (
-    <Card className="p-4 flex items-center gap-3 shadow-[var(--shadow-soft)] border-border/60">
+    <Card
+      className="p-4 flex items-center gap-3 shadow-[var(--shadow-soft)] cursor-pointer hover:brightness-95 transition"
+      style={{ backgroundColor: color.bg, borderColor: color.border }}
+      onClick={() => onEdit(task)}
+    >
       <button
-        onClick={() => onDone(task.id)}
+        onClick={(e) => { e.stopPropagation(); onDone(task.id); }}
         className="shrink-0 rounded-full text-primary hover:text-primary-glow transition-colors"
         aria-label="Erledigt"
       >
@@ -305,7 +415,7 @@ function TaskRow({ task, onDone, onDelete }: { task: Task; onDone: (id: string) 
           ) : (
             <span className="inline-flex items-center gap-1 italic">ohne Frist</span>
           )}
-          <Badge variant="outline" className="gap-1 font-normal">
+          <Badge variant="outline" className="gap-1 font-normal bg-background/60">
             <Tag className="h-3 w-3" />{task.category}
           </Badge>
           {task.repeat !== "none" && (
@@ -316,7 +426,7 @@ function TaskRow({ task, onDone, onDelete }: { task: Task; onDone: (id: string) 
         </div>
       </div>
       <button
-        onClick={() => onDelete(task.id)}
+        onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
         className="shrink-0 text-muted-foreground hover:text-destructive transition-colors p-1"
         aria-label="Löschen"
       >
