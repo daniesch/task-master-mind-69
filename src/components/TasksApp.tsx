@@ -355,8 +355,6 @@ function EditTaskDialog({
     </Dialog>
   );
 }
-  );
-}
 
 function CategoryPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
