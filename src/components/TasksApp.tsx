@@ -221,6 +221,37 @@ export default function TasksApp() {
             </Dialog>
           </div>
 
+          <TabsContent value="priority" className="mt-4 space-y-5">
+            {openTasks.length === 0 && <EmptyState />}
+            {priorityByCategory.map(([cat, list]) => {
+              const color = categoryColor(cat);
+              return (
+                <section key={cat} className="space-y-2">
+                  <div className="flex items-center gap-2 px-1">
+                    <span
+                      className="inline-block h-3 w-3 rounded-full border"
+                      style={{ backgroundColor: color.bg, borderColor: color.border }}
+                    />
+                    <h3 className="text-sm font-semibold text-foreground">{cat}</h3>
+                    <span className="text-xs text-muted-foreground">({list.length})</span>
+                  </div>
+                  <ol className="space-y-2">
+                    {list.map((t, i) => (
+                      <div key={t.id} className="flex items-start gap-2">
+                        <span className="mt-4 w-5 shrink-0 text-center text-xs font-bold text-muted-foreground">
+                          {i + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <TaskRow task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />
+                        </div>
+                      </div>
+                    ))}
+                  </ol>
+                </section>
+              );
+            })}
+          </TabsContent>
+
           <TabsContent value="all" className="mt-4 space-y-2">
             {openTasks.length === 0 && <EmptyState />}
             {overdue.map((t) => <TaskRow key={t.id} task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />)}
