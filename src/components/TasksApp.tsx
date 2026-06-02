@@ -154,6 +154,7 @@ export default function TasksApp() {
         <Tabs defaultValue="all">
           <div className="flex items-center justify-between gap-3">
             <TabsList>
+              <TabsTrigger value="priority">Priorität</TabsTrigger>
               <TabsTrigger value="all">Alle ({openTasks.length})</TabsTrigger>
               <TabsTrigger value="today">Heute ({today.length})</TabsTrigger>
               <TabsTrigger value="overdue">Überfällig ({overdue.length})</TabsTrigger>
