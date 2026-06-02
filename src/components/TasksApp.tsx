@@ -151,7 +151,7 @@ export default function TasksApp() {
         </div>
 
         {/* Overview */}
-        <Tabs defaultValue="all">
+        <Tabs defaultValue="priority">
           <div className="flex items-center justify-between gap-3">
             <TabsList>
               <TabsTrigger value="priority">Priorität</TabsTrigger>
