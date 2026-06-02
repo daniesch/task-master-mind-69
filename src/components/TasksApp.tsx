@@ -54,6 +54,27 @@ export default function TasksApp() {
       return b.durationMinutes - a.durationMinutes;
     });
 
+  // Priorisierung innerhalb jeder Kategorie:
+  // 1) Überfällig (am stärksten überfällig zuerst)
+  // 2) Fällige nach Datum (näher zuerst)
+  // 3) Ohne Frist (kürzere zuerst als Quick Wins)
+  const priorityByCategory = useMemo(() => {
+    const groups = new Map<string, Task[]>();
+    for (const t of openTasks) {
+      if (!groups.has(t.category)) groups.set(t.category, []);
+      groups.get(t.category)!.push(t);
+    }
+    for (const [, list] of groups) {
+      list.sort((a, b) => {
+        const da = daysUntil(a.dueDate);
+        const db = daysUntil(b.dueDate);
+        if (da !== db) return da - db;
+        return a.durationMinutes - b.durationMinutes;
+      });
+    }
+    return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [openTasks]);
+
   function submit() {
     if (!title.trim() || !duration) return;
     if (hasDueDate && !dueDate) return;
@@ -130,9 +151,10 @@ export default function TasksApp() {
         </div>
 
         {/* Overview */}
-        <Tabs defaultValue="all">
+        <Tabs defaultValue="priority">
           <div className="flex items-center justify-between gap-3">
             <TabsList>
+              <TabsTrigger value="priority">Priorität</TabsTrigger>
               <TabsTrigger value="all">Alle ({openTasks.length})</TabsTrigger>
               <TabsTrigger value="today">Heute ({today.length})</TabsTrigger>
               <TabsTrigger value="overdue">Überfällig ({overdue.length})</TabsTrigger>
@@ -198,6 +220,37 @@ export default function TasksApp() {
               </DialogContent>
             </Dialog>
           </div>
+
+          <TabsContent value="priority" className="mt-4 space-y-5">
+            {openTasks.length === 0 && <EmptyState />}
+            {priorityByCategory.map(([cat, list]) => {
+              const color = categoryColor(cat);
+              return (
+                <section key={cat} className="space-y-2">
+                  <div className="flex items-center gap-2 px-1">
+                    <span
+                      className="inline-block h-3 w-3 rounded-full border"
+                      style={{ backgroundColor: color.bg, borderColor: color.border }}
+                    />
+                    <h3 className="text-sm font-semibold text-foreground">{cat}</h3>
+                    <span className="text-xs text-muted-foreground">({list.length})</span>
+                  </div>
+                  <ol className="space-y-2">
+                    {list.map((t, i) => (
+                      <div key={t.id} className="flex items-start gap-2">
+                        <span className="mt-4 w-5 shrink-0 text-center text-xs font-bold text-muted-foreground">
+                          {i + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <TaskRow task={t} onDone={completeTask} onDelete={removeTask} onEdit={setEditing} />
+                        </div>
+                      </div>
+                    ))}
+                  </ol>
+                </section>
+              );
+            })}
+          </TabsContent>
 
           <TabsContent value="all" className="mt-4 space-y-2">
             {openTasks.length === 0 && <EmptyState />}
