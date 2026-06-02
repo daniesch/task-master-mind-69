@@ -54,6 +54,27 @@ export default function TasksApp() {
       return b.durationMinutes - a.durationMinutes;
     });
 
+  // Priorisierung innerhalb jeder Kategorie:
+  // 1) Überfällig (am stärksten überfällig zuerst)
+  // 2) Fällige nach Datum (näher zuerst)
+  // 3) Ohne Frist (kürzere zuerst als Quick Wins)
+  const priorityByCategory = useMemo(() => {
+    const groups = new Map<string, Task[]>();
+    for (const t of openTasks) {
+      if (!groups.has(t.category)) groups.set(t.category, []);
+      groups.get(t.category)!.push(t);
+    }
+    for (const [, list] of groups) {
+      list.sort((a, b) => {
+        const da = daysUntil(a.dueDate);
+        const db = daysUntil(b.dueDate);
+        if (da !== db) return da - db;
+        return a.durationMinutes - b.durationMinutes;
+      });
+    }
+    return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [openTasks]);
+
   function submit() {
     if (!title.trim() || !duration) return;
     if (hasDueDate && !dueDate) return;
