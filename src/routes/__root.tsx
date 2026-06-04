@@ -85,6 +85,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-title", content: "Aufgaben" },
       { name: "mobile-web-app-capable", content: "yes" },
       { property: "og:type", content: "website" },
+      { property: "og:title", content: "Aufgaben" },
+      { name: "twitter:title", content: "Aufgaben" },
+      { property: "og:description", content: "Smarte Aufgabenverwaltung mit Zeit-basierten Vorschlägen." },
+      { name: "twitter:description", content: "Smarte Aufgabenverwaltung mit Zeit-basierten Vorschlägen." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/16559d7c-99cb-4714-a6d5-a8e668e0194e/id-preview-31370e93--96e76ba2-ae74-432f-a5a1-96204669ac5d.lovable.app-1780553267762.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/16559d7c-99cb-4714-a6d5-a8e668e0194e/id-preview-31370e93--96e76ba2-ae74-432f-a5a1-96204669ac5d.lovable.app-1780553267762.png" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
