@@ -52,6 +52,23 @@ function writeCategories(cats: string[]) {
   window.dispatchEvent(new Event("tasks:updated"));
 }
 
+export function exportTasks(): { tasks: Task[]; categories: string[]; exportedAt: string } {
+  return {
+    tasks: read(),
+    categories: readCategories(),
+    exportedAt: new Date().toISOString(),
+  };
+}
+
+export function importTasks(data: { tasks?: Task[]; categories?: string[] }) {
+  if (Array.isArray(data.tasks)) {
+    write(data.tasks);
+  }
+  if (Array.isArray(data.categories) && data.categories.length > 0) {
+    writeCategories(data.categories);
+  }
+}
+
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
